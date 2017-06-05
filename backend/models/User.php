@@ -53,7 +53,18 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            [['username', 'password_hash'], 'required'],
         ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function fields()
+    {
+        $fields = parent::fields();
+        unset($fields['auth_key'], $fields['password_hash'], $fields['password_reset_token']);
+        return $fields;
     }
 
     /**
