@@ -8,7 +8,8 @@ $config = [
     'bootstrap' => ['log'],
     'components' => [
         'request' => [
-            'cookieValidationKey' => 'w6n8JCMcHL6HQn6AVa4cDdgv-CN9',
+           // 'cookieValidationKey' => 'w6n8JCMcHL6HQn6AVa4cDdgv-CN9',
+            'enableCookieValidation' => false,
             'parsers' => [
                 'application/json' => 'yii\web\JsonParser',
             ]
@@ -18,10 +19,11 @@ $config = [
         ],
         'user' => [
             'identityClass' => 'app\models\User',
-            'enableAutoLogin' => true,
+            'enableSession' => false,
+            'loginUrl' => null,
         ],
         'errorHandler' => [
-            'errorAction' => 'site/error',
+            'errorAction' => null//'site/error',
         ],
         'mailer' => [
             'class' => 'yii\swiftmailer\Mailer',
@@ -45,7 +47,20 @@ $config = [
             'enableStrictParsing' => true,
             'showScriptName' => false,
             'rules' => [
-                ['class' => 'yii\rest\UrlRule', 'controller' => 'user'],
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => 'user'
+                ],
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => ['api' => 'api'],
+                    'patterns' => [
+                        'POST login' => 'login',
+                        // OPTIONS VERBS
+                        'OPTIONS login' => 'options',
+                    ],
+                ]
+
             ],
         ]
     ],
