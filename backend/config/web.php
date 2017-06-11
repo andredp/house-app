@@ -56,8 +56,7 @@ $config = [
                     'controller' => ['api' => 'api'],
                     'patterns' => [
                         'POST login' => 'login',
-                        // OPTIONS VERBS
-                        'OPTIONS login' => 'options',
+                        'POST validate-token' => 'validate-token',
                     ],
                 ]
 

@@ -4,6 +4,7 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
+use yii\helpers\ArrayHelper;
 
 /**
  * LoginForm is the model behind the login form.
@@ -13,12 +14,24 @@ use yii\base\Model;
  */
 class LoginForm extends Model
 {
+
+    const SCENARIO_VALIDATE = 'validate';
+    const SCENARIO_LOGIN = 'login';
+
     public $username;
     public $password;
+    public $access_token;
     public $rememberMe = true;
 
     private $_user = false;
 
+    public function scenarios()
+    {
+        return ArrayHelper::merge(parent::scenarios(), [
+            self::SCENARIO_VALIDATE => ['access_token'],
+            self::SCENARIO_LOGIN => ['username', 'password']
+        ]);
+    }
 
     /**
      * @return array the validation rules.
@@ -26,12 +39,15 @@ class LoginForm extends Model
     public function rules()
     {
         return [
-            // username and password are both required
-            [['username', 'password'], 'required'],
+            // username and password are both required on login
+            [['username', 'password'], 'required', 'on' => self::SCENARIO_LOGIN],
+            ['password', 'validatePassword', 'on' => self::SCENARIO_LOGIN],
+
+            ['access_token', 'required', 'on' => self::SCENARIO_VALIDATE],
+            ['access_token', 'validateToken', 'on' => self::SCENARIO_VALIDATE],
+
             // rememberMe must be a boolean value
             ['rememberMe', 'boolean'],
-            // password is validated by validatePassword()
-            ['password', 'validatePassword'],
         ];
     }
 
@@ -49,6 +65,16 @@ class LoginForm extends Model
 
             if (!$user || !$user->validatePassword($this->password)) {
                 $this->addError($attribute, 'Incorrect username or password.');
+            }
+        }
+    }
+
+    public function validateToken($attribute, $params)
+    {
+        if (!$this->hasErrors()) {
+            $user = $this->getUser();
+            if (!$user) {
+                $this->addError($attribute, 'Invalid access token.');
             }
         }
     }
@@ -73,7 +99,11 @@ class LoginForm extends Model
     public function getUser()
     {
         if ($this->_user === false) {
-            $this->_user = User::findByUsername($this->username);
+            if ($this->getScenario() === self::SCENARIO_LOGIN) {
+                $this->_user = User::findByUsername($this->username);
+            } else {
+                $this->_user = User::findIdentityByAccessToken($this->access_token);
+            }
         }
 
         return $this->_user;
